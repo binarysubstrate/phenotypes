@@ -14,7 +14,7 @@ def load_fasta(filename):
     return lengths
 
 
-def main():
+def print_seq_lengths():
     file_names = [
         'heritable.fasta', 'hsp104.fasta', 'hsp70.fasta', 'nc.fasta',
         'orf_trans.fasta', 'overexpression_all.fasta']
@@ -31,7 +31,13 @@ def main():
     print("Mean of the largest "
           "100 sequences: {}".format(np.mean(all_lengths[-5:])))
     print("Mean of all sequences: {}".format(np.mean(all_lengths)))
+    print("Maximum sequence length: {}".format(all_lengths[-1]))
     print("Number of sequences across all files: {}".format(len(all_lengths)))
+    return
+
+
+def main():
+    print_seq_lengths()
     return None
 
 
