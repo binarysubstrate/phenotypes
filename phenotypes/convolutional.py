@@ -91,7 +91,7 @@ def seq_array_driver():
 
     count = 0
     a_seqs = get_sequences(os.path.join('data', 'overexpression_all.fasta'))
-    for aa_seq in aa_seqs:
+    for aa_seq in a_seqs:
         ord_seq = create_ord_seq(aa_seq)
         assert len(ord_seq) == MAX_SEQUENCE
         ord_sequences[count][0] = 1
