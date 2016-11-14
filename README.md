@@ -1,3 +1,6 @@
+# Requirements
+python 3.5+
+
 # Virtual Environment Creation
 
 ```
