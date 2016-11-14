@@ -130,7 +130,16 @@ def run_convo():
 
 
 def main():
-    seq_array_driver()
+    seq_array = seq_array_driver()
+    np.random.shuffle(seq_array)
+    l = len(seq_array)
+    train_index = int(0.8*l)
+    train = seq_array[0:train_index]
+    val_index = int(0.1*l)
+    validate = seq_array[train_index:train_index+val_index]
+    test = seq_array[train_index+val_index:]
+    # array[:,0] array[:,1:]
+
 
 
 if __name__ == '__main__':
