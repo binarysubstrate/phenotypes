@@ -6,7 +6,7 @@ from Bio import SeqIO
 
 
 def load_fasta(filename):
-    """Return the legnths of sequences in a FASTA file."""
+    """Return the lengths of sequences in a FASTA file."""
     lengths = []
     with open(filename, 'r') as handle:
         for record in SeqIO.parse(handle, 'fasta'):
