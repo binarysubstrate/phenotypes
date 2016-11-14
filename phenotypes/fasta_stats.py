@@ -6,7 +6,7 @@ from Bio import SeqIO
 
 
 def load_fasta(filename):
-    """Return the legnths of sequences in a FASTA file."""
+    """Return the lengths of sequences in a FASTA file."""
     lengths = []
     with open(filename, 'r') as handle:
         for record in SeqIO.parse(handle, 'fasta'):
@@ -36,8 +36,28 @@ def print_seq_lengths():
     return
 
 
+def print_possible_chars():
+    file_names = [
+        'heritable.fasta', 'hsp104.fasta', 'hsp70.fasta', 'nc.fasta',
+        'orf_trans.fasta', 'overexpression_all.fasta']
+
+    all_chars = set()
+    for file_name in file_names:
+        with open(os.path.join('data', file_name), 'r') as handle:
+            for record in SeqIO.parse(handle, 'fasta'):
+                for char in record.seq:
+                    all_chars.update(char)
+
+    print("Set of all possible characters:\n{}".format(all_chars))
+    print("Number of all possible characters: {}".format(len(all_chars)))
+
+    return None
+
+
 def main():
     print_seq_lengths()
+    print("")
+    print_possible_chars()
     return None
 
 
