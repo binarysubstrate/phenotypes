@@ -24,6 +24,14 @@ def get_sequences(filename):
     return sequences
 
 
+def get_ids(filename):
+    ids = []
+    with open(filename, 'r') as handle:
+        for record in SeqIO.parse(handle, 'fasta'):
+            ids.append(record.id)
+    return ids
+
+
 def get_total_records(filenames):
     """Return the legnths of sequences in a FASTA file."""
     count = 0
@@ -56,6 +64,7 @@ def convo():
     # now model.output_shape == (None, 10, 32)
     return None
 
+
 def create_ord_seq(aa_seq):
     ord_seq = [ord(char) for char in aa_seq]
     while len(ord_seq) < MAX_SEQUENCE:
@@ -64,33 +73,41 @@ def create_ord_seq(aa_seq):
 
 
 def seq_array_driver():
-    file_names = [
-        'heritable.fasta', 'hsp104.fasta', 'hsp70.fasta', 'nc.fasta',
-        'orf_trans.fasta', 'overexpression_all.fasta']
+    file_names = ['orf_trans.fasta', 'overexpression_all.fasta']
 
-    total_sequences = get_total_records(file_names)
-
-    ord_sequences = np.zeros((total_sequences, 512), dtype=float)
+    total_sequences = get_total_records(['orf_trans.fasta'])
+    oe_ids = get_ids('data/overexpression_all.fasta')
+    ord_sequences = np.zeros((total_sequences, 513), dtype=float)
 
     count = 0
-    for file_name in file_names:
-        aa_seqs = get_sequences(os.path.join('data', file_name))
 
-        for aa_seq in aa_seqs:
-            ord_seq = create_ord_seq(aa_seq)
-            assert len(ord_seq) == MAX_SEQUENCE 
-            ord_sequences[count][:] = ord_seq
-            count += 1
+    aa_seqs = get_sequences(os.path.join('data', 'orf_trans.fasta'))
+    for aa_seq in aa_seqs:
+        ord_seq = create_ord_seq(aa_seq)
+        assert len(ord_seq) == MAX_SEQUENCE
+        ord_sequences[count][0] = 0
+        ord_sequences[count][1:] = ord_seq
+        count += 1
+
+    count = 0
+    a_seqs = get_sequences(os.path.join('data', 'overexpression_all.fasta'))
+    for aa_seq in aa_seqs:
+        ord_seq = create_ord_seq(aa_seq)
+        assert len(ord_seq) == MAX_SEQUENCE
+        ord_sequences[count][0] = 1
+        ord_sequences[count][1:] = ord_seq
+        count += 1
+
     return ord_sequences
 
 
-def main():
+def run_convo():
     ord_sequences = seq_array_driver()
     # TODO: Batch sequences to convo network.
     model = Sequential()
     model.add(Embedding(
-        256, 
-        64, 
+        256,
+        64,
         input_length=MAX_SEQUENCE, dropout=0.5
     ))
     model.add(Convolution1D(
@@ -101,8 +118,8 @@ def main():
     model.add(Dropout(0.5))
     model.add(Dense(1, activation='sigmoid'))
     model.compile(
-        loss='binary_crossentropy', 
-        optimizer='adam', 
+        loss='binary_crossentropy',
+        optimizer='adam',
         metrics=['accuracy']
     )
     print(model.summary())
@@ -110,6 +127,11 @@ def main():
     # Final evaluation of the model
     scores = model.evaluate(X_test, y_test, verbose=0)
     print("Accuracy: %.2f%%" % (scores[1]*100))
+
+
+def main():
+    seq_array_driver()
+
 
 if __name__ == '__main__':
     main()
