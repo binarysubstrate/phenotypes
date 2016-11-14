@@ -7,6 +7,13 @@ from Bio import SeqIO
 from keras.layers import Convolution1D
 from keras.models import Sequential
 
+from keras.layers import Dense
+from keras.layers import LSTM
+from keras.layers import Dropout
+from keras.layers.embeddings import Embedding
+
+MAX_SEQUENCE = 512
+
 
 def get_sequences(filename):
     """Return the sequences from a FASTA file."""
@@ -49,10 +56,9 @@ def convo():
     # now model.output_shape == (None, 10, 32)
     return None
 
-
 def create_ord_seq(aa_seq):
     ord_seq = [ord(char) for char in aa_seq]
-    while len(ord_seq) < 512:
+    while len(ord_seq) < MAX_SEQUENCE:
         ord_seq.append(0)
     return ord_seq
 
@@ -72,7 +78,7 @@ def seq_array_driver():
 
         for aa_seq in aa_seqs:
             ord_seq = create_ord_seq(aa_seq)
-            assert len(ord_seq) == 512
+            assert len(ord_seq) == MAX_SEQUENCE 
             ord_sequences[count][:] = ord_seq
             count += 1
     return ord_sequences
@@ -81,7 +87,29 @@ def seq_array_driver():
 def main():
     ord_sequences = seq_array_driver()
     # TODO: Batch sequences to convo network.
-
+    model = Sequential()
+    model.add(Embedding(
+        256, 
+        64, 
+        input_length=MAX_SEQUENCE, dropout=0.5
+    ))
+    model.add(Convolution1D(
+        64, 3, border_mode='same', input_shape=(128, 64)
+    ))
+    model.add(Dropout(0.5))
+    model.add(LSTM(100))
+    model.add(Dropout(0.5))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(
+        loss='binary_crossentropy', 
+        optimizer='adam', 
+        metrics=['accuracy']
+    )
+    print(model.summary())
+    model.fit(X_train, y_train, nb_epoch=3, batch_size=64)
+    # Final evaluation of the model
+    scores = model.evaluate(X_test, y_test, verbose=0)
+    print("Accuracy: %.2f%%" % (scores[1]*100))
 
 if __name__ == '__main__':
     main()
