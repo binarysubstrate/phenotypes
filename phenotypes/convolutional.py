@@ -55,17 +55,6 @@ def get_ids(filename):
     return ids
 
 
-def get_total_records(filenames):
-    """Return the legnths of sequences in a FASTA file.
-    This can be removed"""
-    count = 0
-    for file in filenames:
-        with open(os.path.join('data', file), 'r') as handle:
-            for record in SeqIO.parse(handle, 'fasta'):
-                count += 1
-    return count
-
-
 def convo():
     nb_filter = 32  # Size of the kernel
     filter_length = 3  # Micro patterns
@@ -97,7 +86,6 @@ def create_ord_seq(aa_seq):
 
 
 def create_seq_array():
-    total_sequences = get_total_records(['orf_trans.fasta'])
     oe_ids = get_ids(os.path.join('data', 'overexpression_all.fasta'))
 
     bg_aa_seqs = get_sequences(os.path.join('data', 'orf_trans.fasta'), oe_ids)
