@@ -21,16 +21,30 @@ Try a set with all the separate categories
 Find a way to include the entire sequence (break up into chunks?)
 Do a 50/50 set - especially make a test set that is 50/50
 Look at 1 neuron vs. 20
+set numbers to be a smaller subset
 """
 
-def get_sequences(filename):
+def get_sequences(filename, exclude):
     """Return the sequences from a FASTA file."""
     # ToDo: Validate sequence only contains 20 standard amino acids
     sequences = []
     with open(filename, 'r') as handle:
         for record in SeqIO.parse(handle, 'fasta'):
-            sequences.append(record.seq[:512])
+            if record.id not in exclude:
+                sequences.append(record.seq[:512])
     return sequences
+
+
+def seq_array_cats(sequences, cat):
+    ord_sequences = np.zeros((len(sequences), 513), dtype=float)
+    count = 0
+    for aa_seq in sequences:
+        ord_seq = create_ord_seq(aa_seq)
+        assert len(ord_seq) == MAX_SEQUENCE
+        ord_sequences[count][0] = cat
+        ord_sequences[count][1:] = ord_seq
+        count += 1
+    return ord_sequences
 
 
 def get_ids(filename):
@@ -42,7 +56,8 @@ def get_ids(filename):
 
 
 def get_total_records(filenames):
-    """Return the legnths of sequences in a FASTA file."""
+    """Return the legnths of sequences in a FASTA file.
+    This can be removed"""
     count = 0
     for file in filenames:
         with open(os.path.join('data', file), 'r') as handle:
@@ -83,29 +98,29 @@ def create_ord_seq(aa_seq):
 
 def create_seq_array():
     total_sequences = get_total_records(['orf_trans.fasta'])
-    oe_ids = get_ids('data/overexpression_all.fasta')
-    ord_sequences = np.zeros((total_sequences, 513), dtype=float)
+    oe_ids = get_ids(os.path.join('data', 'overexpression_all.fasta'))
 
-    count = 0
+    bg_aa_seqs = get_sequences(os.path.join('data', 'orf_trans.fasta'), oe_ids)
+    bg_seq_array = seq_array_cats(bg_aa_seqs, 0)
 
-    aa_seqs = get_sequences(os.path.join('data', 'orf_trans.fasta'))
-    for aa_seq in aa_seqs:
-        ord_seq = create_ord_seq(aa_seq)
-        assert len(ord_seq) == MAX_SEQUENCE
-        ord_sequences[count][0] = 0
-        ord_sequences[count][1:] = ord_seq
-        count += 1
+    oe_aa_seqs = get_sequences(os.path.join('data', 'overexpression_all.fasta'), [])
+    oe_seq_array = seq_array_cats(oe_aa_seqs, 0)
 
-    count = 0
-    a_seqs = get_sequences(os.path.join('data', 'overexpression_all.fasta'))
-    for aa_seq in a_seqs:
-        ord_seq = create_ord_seq(aa_seq)
-        assert len(ord_seq) == MAX_SEQUENCE
-        ord_sequences[count][0] = 1
-        ord_sequences[count][1:] = ord_seq
-        count += 1
+    bg_train_index = int(0.8 * len(bg_seq_array))
+    oe_train_index = int(0.8 * len(oe_seq_array))
 
-    return ord_sequences
+    array_size = bg_train_index + oe_train_index
+
+    ord_sequences = np.zeros((array_size, MAX_SEQUENCE + 1), dtype=float)
+
+    oe_test_total = int(len(oe_seq_array) - oe_train_index)
+    train = np.append(bg_seq_array[:bg_train_index], oe_seq_array[:oe_train_index])
+    test = np.append(bg_seq_array[bg_train_index:bg_train_index+oe_test_total],
+                     oe_seq_array[oe_train_index:])
+    np.random.shuffle(train)
+    np.random.shuffle(test)
+
+    return train, test
 
 
 def run_convo(train, test):
@@ -145,12 +160,9 @@ def run_convo(train, test):
 
 def main():
     seq_array = create_seq_array()
-    np.random.shuffle(seq_array)
-    l = len(seq_array)
-    train_index = int(0.8 * l)
-    train = seq_array[:train_index]
-    test = seq_array[train_index:]
-    run_convo(train, test)
+    print(seq_array)
+
+    #run_convo(train, test)
 
 
 
