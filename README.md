@@ -1,5 +1,7 @@
 # Requirements
 python 3.5+
+h5py
+
 
 # Virtual Environment Creation
 
