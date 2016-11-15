@@ -14,13 +14,6 @@ from keras.layers.embeddings import Embedding
 
 MAX_SEQUENCE = 512
 
-"""
-ToDo:
-Try a set with all the separate categories
-Find a way to include the entire sequence (break up into chunks?)
-Look at 1 neuron vs. 20
-set numbers to be a smaller subset
-"""
 
 def get_sequences(filename, exclude):
     """Return the sequences from a FASTA file."""
