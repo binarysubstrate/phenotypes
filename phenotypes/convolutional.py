@@ -55,11 +55,29 @@ def get_ids(filename):
             ids.append(record.id)
     return ids
 
+
 def create_ord_seq(aa_seq):
     ord_seq = [ord(char) for char in aa_seq]
     while len(ord_seq) < MAX_SEQUENCE:
         ord_seq.append(0)
     return ord_seq
+
+
+def create_localization_array():
+    fastas = ['chloroplast.fasta', 'cytoplasmic.fasta', 'ER.fasta',
+              'extracellular.fasta', 'Golgi.fasta', 'nuclear.fasta',
+              'peroxisomal.fasta', 'plasma_membrane.fasta', 'vacuolar.fasta']
+    chloroplast_sequences = get_sequences(os.path.join(DATA, 'chloroplast.fasta'), [])
+    all_array = seq_array_cats(chloroplast_sequences, 0)
+    for i, fasta in enumerate(fastas):
+        aa_seqs = get_sequences(os.path.join(DATA, fasta), [])
+        seq_array = seq_array_cats(aa_seqs, i + 1)
+        all_array = np.concatenate((all_array, seq_array), axis=0)
+    np.random.shuffle(all_array)
+    train_index = int(0.9 * len(all_array))
+    train = all_array[:train_index]
+    test = all_array[train_index:]
+    return train, test
 
 
 def create_seq_array():
@@ -92,6 +110,7 @@ def create_seq_array():
     np.random.shuffle(train)
     np.random.shuffle(test)
     return train, test
+
 
 def create_model( ):
     """Create the network model"""
@@ -184,6 +203,7 @@ def run_convo(train, test,resume=False):
 
 def main():
     options = get_options().parse_args()
+    #train, test = create_localization_array()
     train, test = create_seq_array()
     run_convo(train, test, resume = options.resume)
 
