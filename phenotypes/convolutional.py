@@ -123,7 +123,7 @@ def create_model( categories=1 ):
     model.add(Embedding(
         256,
         64,
-        input_length=MAX_SEQUENCE, dropout=0.5
+        input_length=MAX_SEQUENCE
     ))
     model.add(Dropout(0.2))
     model.add(Convolution1D(

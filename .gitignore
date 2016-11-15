@@ -326,3 +326,6 @@ CTestTestfile.cmake
 # IntelliJ
 .idea/
 *.iml
+
+# Project Data Binaries
+*.hdf5

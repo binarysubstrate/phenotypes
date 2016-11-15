@@ -1,0 +1,62 @@
+commit ca08e5c4caa0951f0eeee8f7113485ed174ad094
+Tue Nov 15 11:35:04 EST 2016
+
+
+____________________________________________________________________________________________________
+Layer (type)                     Output Shape          Param #     Connected to                     
+====================================================================================================
+embedding_1 (Embedding)          (None, 512, 64)       16384       embedding_input_1[0][0]          
+____________________________________________________________________________________________________
+dropout_1 (Dropout)              (None, 512, 64)       0           embedding_1[0][0]                
+____________________________________________________________________________________________________
+convolution1d_1 (Convolution1D)  (None, 512, 32)       20512       dropout_1[0][0]                  
+____________________________________________________________________________________________________
+dropout_2 (Dropout)              (None, 512, 32)       0           convolution1d_1[0][0]            
+____________________________________________________________________________________________________
+convolution1d_2 (Convolution1D)  (None, 512, 32)       3104        dropout_2[0][0]                  
+____________________________________________________________________________________________________
+dropout_3 (Dropout)              (None, 512, 32)       0           convolution1d_2[0][0]            
+____________________________________________________________________________________________________
+convolution1d_3 (Convolution1D)  (None, 512, 16)       1552        dropout_3[0][0]                  
+____________________________________________________________________________________________________
+dropout_4 (Dropout)              (None, 512, 16)       0           convolution1d_3[0][0]            
+____________________________________________________________________________________________________
+convolution1d_4 (Convolution1D)  (None, 512, 16)       784         dropout_4[0][0]                  
+____________________________________________________________________________________________________
+dropout_5 (Dropout)              (None, 512, 16)       0           convolution1d_4[0][0]            
+____________________________________________________________________________________________________
+convolution1d_5 (Convolution1D)  (None, 512, 16)       784         dropout_5[0][0]                  
+____________________________________________________________________________________________________
+dropout_6 (Dropout)              (None, 512, 16)       0           convolution1d_5[0][0]            
+____________________________________________________________________________________________________
+lstm_1 (LSTM)                    (None, 64)            20736       dropout_6[0][0]                  
+____________________________________________________________________________________________________
+dropout_7 (Dropout)              (None, 64)            0           lstm_1[0][0]                     
+____________________________________________________________________________________________________
+dense_1 (Dense)                  (None, 9)             585         dropout_7[0][0]                  
+====================================================================================================
+Total params: 64441
+
+
+____________________________________________________________________________________________________
+None
+/home/michelle/priv/anaconda3/envs/tensorflow/lib/python3.5/site-packages/tensorflow/python/ops/gradients.py:90: UserWarning: Converting sparse IndexedSlices to a dense Tensor of unknown shape. This may consume a large amount of memory.
+  "Converting sparse IndexedSlices to a dense Tensor of unknown shape. "
+Epoch 1/5
+4800/4811 [============================>.] - ETA: 0s - loss: 0.3741 - binary_accuracy: 0.8582Epoch 00000: saving model to /home/michelle/dev/phenotypes/phenotypes/data/weights-000.hdf5
+4811/4811 [==============================] - 139s - loss: 0.3739 - binary_accuracy: 0.8583   
+Epoch 2/5
+4800/4811 [============================>.] - ETA: 0s - loss: 0.3195 - binary_accuracy: 0.8879Epoch 00001: saving model to /home/michelle/dev/phenotypes/phenotypes/data/weights-001.hdf5
+4811/4811 [==============================] - 130s - loss: 0.3195 - binary_accuracy: 0.8879   
+Epoch 3/5
+4800/4811 [============================>.] - ETA: 0s - loss: 0.3177 - binary_accuracy: 0.8873Epoch 00002: saving model to /home/michelle/dev/phenotypes/phenotypes/data/weights-002.hdf5
+4811/4811 [==============================] - 135s - loss: 0.3176 - binary_accuracy: 0.8873   
+Epoch 4/5
+4800/4811 [============================>.] - ETA: 0s - loss: 0.3150 - binary_accuracy: 0.8879Epoch 00003: saving model to /home/michelle/dev/phenotypes/phenotypes/data/weights-003.hdf5
+4811/4811 [==============================] - 133s - loss: 0.3150 - binary_accuracy: 0.8879   
+Epoch 5/5
+4800/4811 [============================>.] - ETA: 0s - loss: 0.3119 - binary_accuracy: 0.8885Epoch 00004: saving model to /home/michelle/dev/phenotypes/phenotypes/data/weights-004.hdf5
+4811/4811 [==============================] - 131s - loss: 0.3118 - binary_accuracy: 0.8885   
+535/535 [==============================] - 2s     
+Accuracy: 88.89%
+
