@@ -105,8 +105,6 @@ def create_seq_array():
 
 
 def run_convo(train, test):
-    ord_sequences = create_seq_array()
-    # TODO: Batch sequences to convo network.
     model = Sequential()
     model.add(Embedding(
         256,
@@ -132,7 +130,6 @@ def run_convo(train, test):
     sequences_test = test[:, 1:]
     categories_test = test[:, 0]
 
-
     model.fit(sequences, categories, nb_epoch=3, batch_size=64)
     # Final evaluation of the model
     scores = model.evaluate(sequences_test, categories_test, verbose=0)
@@ -141,7 +138,7 @@ def run_convo(train, test):
 
 def main():
     train, test = create_seq_array()
-    #run_convo(train, test)
+    run_convo(train, test)
 
 
 
