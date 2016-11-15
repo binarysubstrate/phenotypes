@@ -16,10 +16,8 @@ MAX_SEQUENCE = 512
 
 """
 ToDo:
-Remove positives from negative set
 Try a set with all the separate categories
 Find a way to include the entire sequence (break up into chunks?)
-Do a 50/50 set - especially make a test set that is 50/50
 Look at 1 neuron vs. 20
 set numbers to be a smaller subset
 """
@@ -92,18 +90,17 @@ def create_seq_array():
     bg_seq_array = seq_array_cats(bg_aa_seqs, 0)
 
     oe_aa_seqs = get_sequences(os.path.join('data', 'overexpression_all.fasta'), [])
-    oe_seq_array = seq_array_cats(oe_aa_seqs, 0)
+    oe_seq_array = seq_array_cats(oe_aa_seqs, 1)
 
     bg_train_index = int(0.8 * len(bg_seq_array))
     oe_train_index = int(0.8 * len(oe_seq_array))
 
     oe_test_total = int(len(oe_seq_array) - oe_train_index)
-    train = np.append(bg_seq_array[:bg_train_index], oe_seq_array[:oe_train_index])
-    test = np.append(bg_seq_array[bg_train_index:bg_train_index+oe_test_total],
-                     oe_seq_array[oe_train_index:])
+    train = np.concatenate((bg_seq_array[:bg_train_index], oe_seq_array[:oe_train_index]), axis=0)
+    test = np.concatenate((bg_seq_array[bg_train_index:bg_train_index+oe_test_total],
+                            oe_seq_array[oe_train_index:]), axis=0)
     np.random.shuffle(train)
     np.random.shuffle(test)
-
     return train, test
 
 
@@ -144,9 +141,6 @@ def run_convo(train, test):
 
 def main():
     train, test = create_seq_array()
-    print(train)
-    print(test)
-
     #run_convo(train, test)
 
 
