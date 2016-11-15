@@ -83,15 +83,26 @@ def create_seq_array():
     bg_seq_array = seq_array_cats(bg_aa_seqs, 0)
 
     oe_aa_seqs = get_sequences(os.path.join('data', 'overexpression_all.fasta'), [])
+    # crudely boost the positive signals by over-sampling
+    # should investigate using a proper oversampling method..
+    oe_aa_seqs = np.repeat( oe_aa_seqs, int(len(bg_aa_seqs)/len(oe_aa_seqs)))
     oe_seq_array = seq_array_cats(oe_aa_seqs, 1)
 
     bg_train_index = int(0.8 * len(bg_seq_array))
     oe_train_index = int(0.8 * len(oe_seq_array))
 
     oe_test_total = int(len(oe_seq_array) - oe_train_index)
-    train = np.concatenate((bg_seq_array[:bg_train_index], oe_seq_array[:oe_train_index]), axis=0)
-    test = np.concatenate((bg_seq_array[bg_train_index:bg_train_index+oe_test_total],
-                            oe_seq_array[oe_train_index:]), axis=0)
+    
+    train = np.concatenate((
+        bg_seq_array[:bg_train_index], 
+        oe_seq_array[:oe_train_index]), 
+        axis=0
+    )
+    test = np.concatenate((
+        bg_seq_array[bg_train_index:bg_train_index+oe_test_total],
+        oe_seq_array[oe_train_index:]), 
+        axis=0
+    )
     np.random.shuffle(train)
     np.random.shuffle(test)
     return train, test
@@ -104,22 +115,26 @@ def run_convo(train, test):
         64,
         input_length=MAX_SEQUENCE, dropout=0.5
     ))
+    model.add(Dropout(0.2))
     model.add(Convolution1D(
         10, 10, border_mode='same', input_shape=(128, 64)
     ))
+    model.add(Dropout(0.2))
     model.add(Convolution1D(
         10, 3, border_mode='same', input_shape=(10,10)
     ))
+    model.add(Dropout(0.2))
     model.add(Convolution1D(
         10, 3, border_mode='same', input_shape=(10,10)
     ))
+    model.add(Dropout(0.2))
     model.add(Convolution1D(
         10, 3, border_mode='same', input_shape=(10,10)
     ))
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.2))
     model.add(LSTM(32))
     model.add(Dropout(0.5))
-    model.add(Dense(1, activation='sigmoid'))
+    model.add(Dense(1, activation='relu'))
     model.compile(
         loss='binary_crossentropy',
         optimizer='adam',
@@ -132,7 +147,7 @@ def run_convo(train, test):
     sequences_test = test[:, 1:]
     categories_test = test[:, 0]
 
-    model.fit(sequences, categories, nb_epoch=3, batch_size=64)
+    model.fit(sequences, categories, nb_epoch=10, batch_size=32)
     # Final evaluation of the model
     scores = model.evaluate(sequences_test, categories_test, verbose=0)
     print("Accuracy: %.2f%%" % (scores[1]*100))
