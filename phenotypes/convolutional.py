@@ -1,5 +1,5 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
-#import keras
 import os, glob, logging
 import numpy as np
 
@@ -13,7 +13,6 @@ from keras.layers import Dropout
 from keras.layers.embeddings import Embedding
 from keras.callbacks import ModelCheckpoint
 
-#from keras.utils.np_utils import to_categorical
 HERE = os.path.dirname( __file__ )
 DATA = os.path.join( HERE, 'data' )
 log = logging.getLogger(__name__)
@@ -36,14 +35,17 @@ def get_sequences(filename, exclude):
     return sequences
 
 
-def seq_array_cats(sequences, cat):
-    ord_sequences = np.zeros((len(sequences), 513), dtype=float)
+def seq_array_cats(sequences, cat, categories=1):
+    ord_sequences = np.zeros(
+        (len(sequences), 512+categories), 
+        dtype=float
+    )
     count = 0
     for aa_seq in sequences:
         ord_seq = create_ord_seq(aa_seq)
         assert len(ord_seq) == MAX_SEQUENCE
-        ord_sequences[count][0] = cat
-        ord_sequences[count][1:] = ord_seq
+        ord_sequences[count][cat] = 1
+        ord_sequences[count][categories:] = ord_seq
         count += 1
     return ord_sequences
 
@@ -67,9 +69,12 @@ def create_localization_array():
     fastas = ['chloroplast.fasta', 'cytoplasmic.fasta', 'ER.fasta',
               'extracellular.fasta', 'Golgi.fasta', 'nuclear.fasta',
               'peroxisomal.fasta', 'plasma_membrane.fasta', 'vacuolar.fasta']
-    chloroplast_sequences = get_sequences(os.path.join(DATA, 'chloroplast.fasta'), [])
-    all_array = seq_array_cats(chloroplast_sequences, 0)
-    for i, fasta in enumerate(fastas):
+    chloroplast_sequences = get_sequences(
+        os.path.join(DATA, 'chloroplast.fasta'), 
+        []
+    )
+    all_array = seq_array_cats(chloroplast_sequences, 0, categories=9)
+    for i, fasta in enumerate(fastas[1:]):
         aa_seqs = get_sequences(os.path.join(DATA, fasta), [])
         seq_array = seq_array_cats(aa_seqs, i + 1)
         all_array = np.concatenate((all_array, seq_array), axis=0)
@@ -112,7 +117,7 @@ def create_seq_array():
     return train, test
 
 
-def create_model( ):
+def create_model( categories=1 ):
     """Create the network model"""
     model = Sequential()
     model.add(Embedding(
@@ -147,7 +152,7 @@ def create_model( ):
         dropout_U=.2,
     ))
     model.add(Dropout(0.5))
-    model.add(Dense(1, activation='sigmoid'))
+    model.add(Dense(categories, activation='sigmoid'))
     model.compile(
         loss='binary_crossentropy',
         optimizer='adam',
@@ -156,8 +161,8 @@ def create_model( ):
     return model
 
 
-def run_convo(train, test,resume=False):
-    model = create_model()
+def run_convo(train, test,resume=False, category_count=1):
+    model = create_model(category_count)
     print(model.summary())
     if resume:
         weights = sorted(glob.glob(
@@ -166,11 +171,11 @@ def run_convo(train, test,resume=False):
         if weights:
             print( "loading weights from %s",weights[-1])
             model.load_weights(weights[-1])
-    sequences = train[:, 1:]
-    categories = train[:, 0]
+    sequences = train[:, category_count:]
+    categories = train[:, :category_count]
 
-    sequences_test = test[:, 1:]
-    categories_test = test[:, 0]
+    sequences_test = test[:, category_count:]
+    categories_test = test[:, :category_count]
     
 #    early_stopping = keras.callbacks.EarlyStopping(
 #        monitor='accuracy', patience=0, verbose=1, mode='auto'
@@ -203,9 +208,9 @@ def run_convo(train, test,resume=False):
 
 def main():
     options = get_options().parse_args()
-    #train, test = create_localization_array()
-    train, test = create_seq_array()
-    run_convo(train, test, resume = options.resume)
+    train, test = create_localization_array()
+    #train, test = create_seq_array()
+    run_convo(train, test, resume = options.resume, category_count=9)
 
 def get_options():
     import argparse
