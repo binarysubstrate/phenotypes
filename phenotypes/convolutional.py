@@ -102,7 +102,6 @@ def seq_array_driver():
 
 
 def run_convo(train, test):
-    ord_sequences = seq_array_driver()
     # TODO: Batch sequences to convo network.
     model = Sequential()
     model.add(Embedding(
