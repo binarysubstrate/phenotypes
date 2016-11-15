@@ -210,7 +210,7 @@ def main():
     options = get_options().parse_args()
     train, test = create_localization_array()
     #train, test = create_seq_array()
-    #run_convo(train, test, resume = options.resume, category_count=9)
+    run_convo(train, test, resume = options.resume, category_count=9)
 
 def get_options():
     import argparse
