@@ -105,10 +105,19 @@ def run_convo(train, test):
         input_length=MAX_SEQUENCE, dropout=0.5
     ))
     model.add(Convolution1D(
-        64, 3, border_mode='same', input_shape=(128, 64)
+        10, 10, border_mode='same', input_shape=(128, 64)
+    ))
+    model.add(Convolution1D(
+        10, 3, border_mode='same', input_shape=(10,10)
+    ))
+    model.add(Convolution1D(
+        10, 3, border_mode='same', input_shape=(10,10)
+    ))
+    model.add(Convolution1D(
+        10, 3, border_mode='same', input_shape=(10,10)
     ))
     model.add(Dropout(0.5))
-    model.add(LSTM(100))
+    model.add(LSTM(32))
     model.add(Dropout(0.5))
     model.add(Dense(1, activation='sigmoid'))
     model.compile(
