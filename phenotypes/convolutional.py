@@ -14,9 +14,18 @@ from keras.layers.embeddings import Embedding
 
 MAX_SEQUENCE = 512
 
+"""
+ToDo:
+Remove positives from negative set
+Try a set with all the separate categories
+Find a way to include the entire sequence (break up into chunks?)
+Do a 50/50 set - especially make a test set that is 50/50
+Look at 1 neuron vs. 20
+"""
 
 def get_sequences(filename):
     """Return the sequences from a FASTA file."""
+    # ToDo: Validate sequence only contains 20 standard amino acids
     sequences = []
     with open(filename, 'r') as handle:
         for record in SeqIO.parse(handle, 'fasta'):
@@ -72,9 +81,7 @@ def create_ord_seq(aa_seq):
     return ord_seq
 
 
-def seq_array_driver():
-    file_names = ['orf_trans.fasta', 'overexpression_all.fasta']
-
+def create_seq_array():
     total_sequences = get_total_records(['orf_trans.fasta'])
     oe_ids = get_ids('data/overexpression_all.fasta')
     ord_sequences = np.zeros((total_sequences, 513), dtype=float)
@@ -102,7 +109,7 @@ def seq_array_driver():
 
 
 def run_convo(train, test):
-    ord_sequences = seq_array_driver()
+    ord_sequences = create_seq_array()
     # TODO: Batch sequences to convo network.
     model = Sequential()
     model.add(Embedding(
@@ -137,7 +144,7 @@ def run_convo(train, test):
 
 
 def main():
-    seq_array = seq_array_driver()
+    seq_array = create_seq_array()
     np.random.shuffle(seq_array)
     l = len(seq_array)
     train_index = int(0.8 * l)
