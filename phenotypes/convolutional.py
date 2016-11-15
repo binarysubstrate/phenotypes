@@ -192,6 +192,8 @@ def get_options():
     parser = argparse.ArgumentParser( description='Run the phenotype search' )
     parser.add_argument(
         '-r','--resume',
+        # todo: need to update the epoch number here,
+        # as we're starting off with very high adam velocity
         help = 'Resume processing using the last-saved epoch (requires an un-changed model)',
         default = False,
         action = 'store_true',
