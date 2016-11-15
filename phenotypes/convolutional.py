@@ -27,17 +27,17 @@ def get_sequences(filename, exclude):
     with open(filename, 'r') as handle:
         for record in SeqIO.parse(handle, 'fasta'):
             if record.id not in exclude:
-                # TODO: where len(seq) > 512 in the 
+                # TODO: where len(seq) > 512 in the
                 # positive set, produce
-                # each 512-byte sequence in the file 
-                # so that 
+                # each 512-byte sequence in the file
+                # so that
                 sequences.append(record.seq[:512])
     return sequences
 
 
 def seq_array_cats(sequences, cat, categories=1):
     ord_sequences = np.zeros(
-        (len(sequences), 512+categories), 
+        (len(sequences), 512+categories),
         dtype=float
     )
     count = 0
@@ -70,7 +70,7 @@ def create_localization_array():
               'extracellular.fasta', 'Golgi.fasta', 'nuclear.fasta',
               'peroxisomal.fasta', 'plasma_membrane.fasta', 'vacuolar.fasta']
     chloroplast_sequences = get_sequences(
-        os.path.join(DATA, 'chloroplast.fasta'), 
+        os.path.join(DATA, 'chloroplast.fasta'),
         []
     )
     all_array = seq_array_cats(chloroplast_sequences, 0, categories=9)
@@ -101,15 +101,15 @@ def create_seq_array():
     oe_train_index = int(0.8 * len(oe_seq_array))
 
     oe_test_total = int(len(oe_seq_array) - oe_train_index)
-    
+
     train = np.concatenate((
-        bg_seq_array[:bg_train_index], 
-        oe_seq_array[:oe_train_index]), 
+        bg_seq_array[:bg_train_index],
+        oe_seq_array[:oe_train_index]),
         axis=0
     )
     test = np.concatenate((
         bg_seq_array[bg_train_index:bg_train_index+oe_test_total],
-        oe_seq_array[oe_train_index:]), 
+        oe_seq_array[oe_train_index:]),
         axis=0
     )
     np.random.shuffle(train)
@@ -176,20 +176,20 @@ def run_convo(train, test,resume=False, category_count=1):
 
     sequences_test = test[:, category_count:]
     categories_test = test[:, :category_count]
-    
+
 #    early_stopping = keras.callbacks.EarlyStopping(
 #        monitor='accuracy', patience=0, verbose=1, mode='auto'
 #    )
     checkpointer = ModelCheckpoint(
-        filepath=os.path.join(DATA,"weights-{epoch:03d}.hdf5"), 
-        verbose=1, 
+        filepath=os.path.join(DATA,"weights-{epoch:03d}.hdf5"),
+        verbose=1,
     )
 
     model.fit(
-        sequences, 
+        sequences,
         categories,
         #to_categorical(categories.astype(bool)),
-        nb_epoch=5, 
+        nb_epoch=5,
         batch_size=16,
         callbacks=[
             #early_stopping,
@@ -198,7 +198,7 @@ def run_convo(train, test,resume=False, category_count=1):
     )
     # Final evaluation of the model
     scores = model.evaluate(
-        sequences_test, 
+        sequences_test,
         categories_test,
         #to_categorical(categories_test.astype(bool)),
         verbose=1
@@ -210,7 +210,8 @@ def main():
     options = get_options().parse_args()
     train, test = create_localization_array()
     #train, test = create_seq_array()
-    #run_convo(train, test, resume = options.resume, category_count=9)
+    run_convo(train, test, resume = options.resume, category_count=9)
+
 
 def get_options():
     import argparse
