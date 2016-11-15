@@ -27,11 +27,15 @@ def get_sequences(filename, exclude):
     with open(filename, 'r') as handle:
         for record in SeqIO.parse(handle, 'fasta'):
             if record.id not in exclude:
+                if len(record.seq) > MAX_SEQUENCE:
+                    start = int((len(record.seq) - MAX_SEQUENCE)/2)
+                    sequences.append(str(record.seq)[start:start+MAX_SEQUENCE])
                 # TODO: where len(seq) > 512 in the
                 # positive set, produce
                 # each 512-byte sequence in the file
                 # so that
-                sequences.append(record.seq[:512])
+                else:
+                    sequences.append(str(record.seq))
     return sequences
 
 
