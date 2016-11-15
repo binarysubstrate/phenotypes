@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #import keras
-import os
+import os, glob, logging
 import numpy as np
 
 from Bio import SeqIO
@@ -16,6 +16,7 @@ from keras.callbacks import ModelCheckpoint
 #from keras.utils.np_utils import to_categorical
 HERE = os.path.dirname( __file__ )
 DATA = os.path.join( HERE, 'data' )
+log = logging.getLogger(__name__)
 
 MAX_SEQUENCE = 512
 
@@ -92,8 +93,8 @@ def create_seq_array():
     np.random.shuffle(test)
     return train, test
 
-
-def run_convo(train, test):
+def create_model( ):
+    """Create the network model"""
     model = Sequential()
     model.add(Embedding(
         256,
@@ -133,7 +134,19 @@ def run_convo(train, test):
         optimizer='adam',
         metrics=['binary_accuracy']
     )
+    return model
+
+
+def run_convo(train, test,resume=False):
+    model = create_model()
     print(model.summary())
+    if resume:
+        weights = sorted(glob.glob(
+            os.path.join( DATA, 'weights-*.hdf5' ),
+        ), key=lambda x: os.stat(x).st_mtime)
+        if weights:
+            print( "loading weights from %s",weights[-1])
+            model.load_weights(weights[-1])
     sequences = train[:, 1:]
     categories = train[:, 0]
 
@@ -144,7 +157,7 @@ def run_convo(train, test):
 #        monitor='accuracy', patience=0, verbose=1, mode='auto'
 #    )
     checkpointer = ModelCheckpoint(
-        filepath=os.path.join(DATA,"weights-{epoch:02d}.hdf5"), 
+        filepath=os.path.join(DATA,"weights-{epoch:03d}.hdf5"), 
         verbose=1, 
     )
 
@@ -170,10 +183,21 @@ def run_convo(train, test):
 
 
 def main():
+    options = get_options().parse_args()
     train, test = create_seq_array()
-    run_convo(train, test)
+    run_convo(train, test, resume = options.resume)
 
-
+def get_options():
+    import argparse
+    parser = argparse.ArgumentParser( description='Run the phenotype search' )
+    parser.add_argument(
+        '-r','--resume',
+        help = 'Resume processing using the last-saved epoch (requires an un-changed model)',
+        default = False,
+        action = 'store_true',
+    )
+    return parser
 
 if __name__ == '__main__':
+    logging.basicConfig( level=logging.INFO )
     main()
