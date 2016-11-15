@@ -53,12 +53,19 @@ def print_possible_chars():
 
     return None
 
+def localization_stats():
+    fastas = ['chloroplast.fasta', 'cytoplasmic.fasta', 'ER.fasta',
+              'extracellular.fasta', 'Golgi.fasta', 'nuclear.fasta',
+              'peroxisomal.fasta', 'plasma_membrane.fasta', 'vacuolar.fasta']
+    total = 0
+    for fasta in fastas:
+        total += len(load_fasta(os.path.join('data/', fasta)))
+        print(len(load_fasta(os.path.join('data/', fasta))))
+    print(1411/total)
+
 
 def main():
-    print_seq_lengths()
-    print("")
-    print_possible_chars()
-    return None
+    localization_stats()
 
 
 if __name__ == '__main__':
