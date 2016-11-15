@@ -1,3 +1,4 @@
 theano
 biopython
 h5py
+keras
