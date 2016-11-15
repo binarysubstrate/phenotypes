@@ -97,10 +97,6 @@ def create_seq_array():
     bg_train_index = int(0.8 * len(bg_seq_array))
     oe_train_index = int(0.8 * len(oe_seq_array))
 
-    array_size = bg_train_index + oe_train_index
-
-    ord_sequences = np.zeros((array_size, MAX_SEQUENCE + 1), dtype=float)
-
     oe_test_total = int(len(oe_seq_array) - oe_train_index)
     train = np.append(bg_seq_array[:bg_train_index], oe_seq_array[:oe_train_index])
     test = np.append(bg_seq_array[bg_train_index:bg_train_index+oe_test_total],
@@ -147,8 +143,9 @@ def run_convo(train, test):
 
 
 def main():
-    seq_array = create_seq_array()
-    print(seq_array)
+    train, test = create_seq_array()
+    print(train)
+    print(test)
 
     #run_convo(train, test)
 
