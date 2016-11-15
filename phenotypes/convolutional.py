@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import keras
+#import keras
 import os
 import numpy as np
 
@@ -11,6 +11,11 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Dropout
 from keras.layers.embeddings import Embedding
+from keras.callbacks import ModelCheckpoint
+
+#from keras.utils.np_utils import to_categorical
+HERE = os.path.dirname( __file__ )
+DATA = os.path.join( HERE, 'data' )
 
 MAX_SEQUENCE = 512
 
@@ -22,6 +27,10 @@ def get_sequences(filename, exclude):
     with open(filename, 'r') as handle:
         for record in SeqIO.parse(handle, 'fasta'):
             if record.id not in exclude:
+                # TODO: where len(seq) > 512 in the 
+                # positive set, produce
+                # each 512-byte sequence in the file 
+                # so that 
                 sequences.append(record.seq[:512])
     return sequences
 
@@ -45,30 +54,6 @@ def get_ids(filename):
             ids.append(record.id)
     return ids
 
-
-def convo():
-    nb_filter = 32  # Size of the kernel
-    filter_length = 3  # Micro patterns
-
-    keras.layers.convolutional.Convolution1D(
-        nb_filter, filter_length, init='uniform', activation='linear',
-        weights=None, border_mode='valid', subsample_length=1,
-        W_regularizer=None, b_regularizer=None, activity_regularizer=None,
-        W_constraint=None, b_constraint=None, bias=True, input_dim=None,
-        input_length=None)
-
-    # apply a convolution 1d of length 3 to a sequence with 10 timesteps,
-    # with 64 output filters
-    model = Sequential()
-    model.add(Convolution1D(64, 3, border_mode='same', input_shape=(10, 32)))
-    # now model.output_shape == (None, 10, 64)
-
-    # add a new conv1d on top
-    model.add(Convolution1D(32, 3, border_mode='same'))
-    # now model.output_shape == (None, 10, 32)
-    return None
-
-
 def create_ord_seq(aa_seq):
     ord_seq = [ord(char) for char in aa_seq]
     while len(ord_seq) < MAX_SEQUENCE:
@@ -77,12 +62,12 @@ def create_ord_seq(aa_seq):
 
 
 def create_seq_array():
-    oe_ids = get_ids(os.path.join('data', 'overexpression_all.fasta'))
+    oe_ids = get_ids(os.path.join(DATA, 'overexpression_all.fasta'))
 
-    bg_aa_seqs = get_sequences(os.path.join('data', 'orf_trans.fasta'), oe_ids)
+    bg_aa_seqs = get_sequences(os.path.join(DATA, 'orf_trans.fasta'), oe_ids)
     bg_seq_array = seq_array_cats(bg_aa_seqs, 0)
 
-    oe_aa_seqs = get_sequences(os.path.join('data', 'overexpression_all.fasta'), [])
+    oe_aa_seqs = get_sequences(os.path.join(DATA, 'overexpression_all.fasta'), [])
     # crudely boost the positive signals by over-sampling
     # should investigate using a proper oversampling method..
     oe_aa_seqs = np.repeat( oe_aa_seqs, int(len(bg_aa_seqs)/len(oe_aa_seqs)))
@@ -117,28 +102,36 @@ def run_convo(train, test):
     ))
     model.add(Dropout(0.2))
     model.add(Convolution1D(
-        10, 10, border_mode='same', input_shape=(128, 64)
+        32, 10, border_mode='same', input_shape=(128, 64)
     ))
     model.add(Dropout(0.2))
     model.add(Convolution1D(
-        10, 3, border_mode='same', input_shape=(10,10)
+        32, 3, border_mode='same', input_shape=(10,10)
     ))
     model.add(Dropout(0.2))
     model.add(Convolution1D(
-        10, 3, border_mode='same', input_shape=(10,10)
+        16, 3, border_mode='same', input_shape=(10,10)
     ))
     model.add(Dropout(0.2))
     model.add(Convolution1D(
-        10, 3, border_mode='same', input_shape=(10,10)
+        16, 3, border_mode='same', input_shape=(10,10)
     ))
     model.add(Dropout(0.2))
-    model.add(LSTM(32))
+    model.add(Convolution1D(
+        16, 3, border_mode='same', input_shape=(10,10)
+    ))
+    model.add(Dropout(0.2))
+    model.add(LSTM(
+        64,
+        dropout_W=.2,
+        dropout_U=.2,
+    ))
     model.add(Dropout(0.5))
-    model.add(Dense(1, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
     model.compile(
         loss='binary_crossentropy',
         optimizer='adam',
-        metrics=['accuracy']
+        metrics=['binary_accuracy']
     )
     print(model.summary())
     sequences = train[:, 1:]
@@ -146,10 +139,33 @@ def run_convo(train, test):
 
     sequences_test = test[:, 1:]
     categories_test = test[:, 0]
+    
+#    early_stopping = keras.callbacks.EarlyStopping(
+#        monitor='accuracy', patience=0, verbose=1, mode='auto'
+#    )
+    checkpointer = ModelCheckpoint(
+        filepath=os.path.join(DATA,"weights-{epoch:02d}.hdf5"), 
+        verbose=1, 
+    )
 
-    model.fit(sequences, categories, nb_epoch=10, batch_size=32)
+    model.fit(
+        sequences, 
+        categories,
+        #to_categorical(categories.astype(bool)),
+        nb_epoch=5, 
+        batch_size=16,
+        callbacks=[
+            #early_stopping,
+            checkpointer,
+        ],
+    )
     # Final evaluation of the model
-    scores = model.evaluate(sequences_test, categories_test, verbose=0)
+    scores = model.evaluate(
+        sequences_test, 
+        categories_test,
+        #to_categorical(categories_test.astype(bool)),
+        verbose=1
+    )
     print("Accuracy: %.2f%%" % (scores[1]*100))
 
 
