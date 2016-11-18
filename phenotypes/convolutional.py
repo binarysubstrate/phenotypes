@@ -215,10 +215,12 @@ def main():
 
 def get_options():
     import argparse
-    parser = argparse.ArgumentParser(description='Run the phenotype search')
+    parser = argparse.ArgumentParser(description='Run the phenotype search.')
     parser.add_argument(
         '-r', '--resume',
-        help='Resume processing using the last-saved epoch (requires an un-changed model)',
+        help=(
+            'Resume processing using the last-saved '
+            'epoch (requires an un-changed model).'),
         default=False,
         action='store_true',
     )
