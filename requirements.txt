@@ -1,5 +1,6 @@
+numpy
+h5py
+scipy
+keras
 theano
 biopython
-h5py
-keras
-numpy
