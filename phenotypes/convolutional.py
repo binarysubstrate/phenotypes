@@ -193,7 +193,6 @@ def run_convo(train, test, resume=False, category_count=1):
         nb_epoch=5,
         batch_size=16,
         callbacks=[
-            # early_stopping,
             checkpointer,
         ],
     )
