@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+import argparse
 import glob
 import logging
 import os
@@ -213,7 +214,6 @@ def main():
 
 
 def get_options():
-    import argparse
     parser = argparse.ArgumentParser(description='Run the phenotype search.')
     parser.add_argument(
         '-r', '--resume',
