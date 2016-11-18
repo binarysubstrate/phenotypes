@@ -23,7 +23,6 @@ MAX_SEQUENCE = 512
 
 def get_sequences(filename, exclude):
     """Return the sequences from a FASTA file."""
-    # TODO: Validate sequence only contains 20 standard amino acids
     sequences = []
     with open(filename, 'r') as handle:
         for record in SeqIO.parse(handle, 'fasta'):
@@ -32,7 +31,6 @@ def get_sequences(filename, exclude):
                     start = int((len(record.seq) - MAX_SEQUENCE) / 2)
                     sequences.append(
                         str(record.seq)[start:start + MAX_SEQUENCE])
-                # TODO: Where len(seq) > 512 in the positive set, produce each 512-byte sequence in the file.
                 else:
                     sequences.append(str(record.seq))
     return sequences
@@ -98,7 +96,6 @@ def create_seq_array():
         os.path.join(DATA, 'overexpression_all.fasta'), [])
 
     # Crudely boost the positive signals by over-sampling.
-    # TODO: investigate using a proper oversampling method.
     oe_aa_seqs = np.repeat(
         oe_aa_seqs,
         int(len(bg_aa_seqs) / len(oe_aa_seqs))
@@ -185,9 +182,6 @@ def run_convo(train, test, resume=False, category_count=1):
     sequences_test = test[:, category_count:]
     categories_test = test[:, :category_count]
 
-    #    early_stopping = keras.callbacks.EarlyStopping(
-    #        monitor='accuracy', patience=0, verbose=1, mode='auto'
-    #    )
     checkpointer = ModelCheckpoint(
         filepath=os.path.join(DATA, "weights-{epoch:03d}.hdf5"),
         verbose=1,
@@ -196,7 +190,6 @@ def run_convo(train, test, resume=False, category_count=1):
     model.fit(
         sequences,
         categories,
-        # to_categorical(categories.astype(bool)),
         nb_epoch=5,
         batch_size=16,
         callbacks=[
@@ -204,11 +197,11 @@ def run_convo(train, test, resume=False, category_count=1):
             checkpointer,
         ],
     )
+
     # Final evaluation of the model.
     scores = model.evaluate(
         sequences_test,
         categories_test,
-        # to_categorical(categories_test.astype(bool)),
         verbose=1
     )
     print("Accuracy: %.2f%%" % (scores[1] * 100))
@@ -217,7 +210,6 @@ def run_convo(train, test, resume=False, category_count=1):
 def main():
     options = get_options().parse_args()
     train, test = create_localization_array()
-    # train, test = create_seq_array()
     run_convo(train, test, resume=options.resume, category_count=9)
 
 
@@ -226,8 +218,6 @@ def get_options():
     parser = argparse.ArgumentParser(description='Run the phenotype search')
     parser.add_argument(
         '-r', '--resume',
-        # TODO: need to update the epoch number here,
-        # as we're starting off with very high adam velocity
         help='Resume processing using the last-saved epoch (requires an un-changed model)',
         default=False,
         action='store_true',
