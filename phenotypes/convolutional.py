@@ -1,17 +1,18 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-import os, glob, logging
+import glob
+import logging
+import os
+
 import numpy as np
-
 from Bio import SeqIO
-from keras.layers import Convolution1D
-from keras.models import Sequential
-
-from keras.layers import Dense
-from keras.layers import LSTM
-from keras.layers import Dropout
-from keras.layers.embeddings import Embedding
 from keras.callbacks import ModelCheckpoint
+from keras.layers import Convolution1D
+from keras.layers import Dense
+from keras.layers import Dropout
+from keras.layers import LSTM
+from keras.layers.embeddings import Embedding
+from keras.models import Sequential
 
 HERE = os.path.dirname( __file__ )
 DATA = os.path.join( HERE, 'data' )
