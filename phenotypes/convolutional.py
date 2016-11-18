@@ -14,8 +14,8 @@ from keras.layers import LSTM
 from keras.layers.embeddings import Embedding
 from keras.models import Sequential
 
-HERE = os.path.dirname( __file__ )
-DATA = os.path.join( HERE, 'data' )
+HERE = os.path.dirname(__file__)
+DATA = os.path.join(HERE, 'data')
 log = logging.getLogger(__name__)
 
 MAX_SEQUENCE = 512
@@ -23,18 +23,16 @@ MAX_SEQUENCE = 512
 
 def get_sequences(filename, exclude):
     """Return the sequences from a FASTA file."""
-    # ToDo: Validate sequence only contains 20 standard amino acids
+    # TODO: Validate sequence only contains 20 standard amino acids
     sequences = []
     with open(filename, 'r') as handle:
         for record in SeqIO.parse(handle, 'fasta'):
             if record.id not in exclude:
                 if len(record.seq) > MAX_SEQUENCE:
-                    start = int((len(record.seq) - MAX_SEQUENCE)/2)
-                    sequences.append(str(record.seq)[start:start+MAX_SEQUENCE])
-                # TODO: where len(seq) > 512 in the
-                # positive set, produce
-                # each 512-byte sequence in the file
-                # so that
+                    start = int((len(record.seq) - MAX_SEQUENCE) / 2)
+                    sequences.append(
+                        str(record.seq)[start:start + MAX_SEQUENCE])
+                # TODO: Where len(seq) > 512 in the positive set, produce each 512-byte sequence in the file.
                 else:
                     sequences.append(str(record.seq))
     return sequences
@@ -42,7 +40,7 @@ def get_sequences(filename, exclude):
 
 def seq_array_cats(sequences, cat, categories=1):
     ord_sequences = np.zeros(
-        (len(sequences), 512+categories),
+        (len(sequences), 512 + categories),
         dtype=float
     )
     count = 0
@@ -96,10 +94,15 @@ def create_seq_array():
     bg_aa_seqs = get_sequences(os.path.join(DATA, 'orf_trans.fasta'), oe_ids)
     bg_seq_array = seq_array_cats(bg_aa_seqs, 0)
 
-    oe_aa_seqs = get_sequences(os.path.join(DATA, 'overexpression_all.fasta'), [])
-    # crudely boost the positive signals by over-sampling
-    # should investigate using a proper oversampling method..
-    oe_aa_seqs = np.repeat( oe_aa_seqs, int(len(bg_aa_seqs)/len(oe_aa_seqs)))
+    oe_aa_seqs = get_sequences(
+        os.path.join(DATA, 'overexpression_all.fasta'), [])
+
+    # Crudely boost the positive signals by over-sampling.
+    # TODO: investigate using a proper oversampling method.
+    oe_aa_seqs = np.repeat(
+        oe_aa_seqs,
+        int(len(bg_aa_seqs) / len(oe_aa_seqs))
+    )
     oe_seq_array = seq_array_cats(oe_aa_seqs, 1)
 
     bg_train_index = int(0.8 * len(bg_seq_array))
@@ -113,7 +116,7 @@ def create_seq_array():
         axis=0
     )
     test = np.concatenate((
-        bg_seq_array[bg_train_index:bg_train_index+oe_test_total],
+        bg_seq_array[bg_train_index:bg_train_index + oe_test_total],
         oe_seq_array[oe_train_index:]),
         axis=0
     )
@@ -122,7 +125,7 @@ def create_seq_array():
     return train, test
 
 
-def create_model( categories=1 ):
+def create_model(categories=1):
     """Create the network model"""
     model = Sequential()
     model.add(Embedding(
@@ -136,19 +139,19 @@ def create_model( categories=1 ):
     ))
     model.add(Dropout(0.2))
     model.add(Convolution1D(
-        32, 3, border_mode='same', input_shape=(10,10)
+        32, 3, border_mode='same', input_shape=(10, 10)
     ))
     model.add(Dropout(0.2))
     model.add(Convolution1D(
-        16, 3, border_mode='same', input_shape=(10,10)
+        16, 3, border_mode='same', input_shape=(10, 10)
     ))
     model.add(Dropout(0.2))
     model.add(Convolution1D(
-        16, 3, border_mode='same', input_shape=(10,10)
+        16, 3, border_mode='same', input_shape=(10, 10)
     ))
     model.add(Dropout(0.2))
     model.add(Convolution1D(
-        16, 3, border_mode='same', input_shape=(10,10)
+        16, 3, border_mode='same', input_shape=(10, 10)
     ))
     model.add(Dropout(0.2))
     model.add(LSTM(
@@ -166,15 +169,15 @@ def create_model( categories=1 ):
     return model
 
 
-def run_convo(train, test,resume=False, category_count=1):
+def run_convo(train, test, resume=False, category_count=1):
     model = create_model(category_count)
     print(model.summary())
     if resume:
         weights = sorted(glob.glob(
-            os.path.join( DATA, 'weights-*.hdf5' ),
+            os.path.join(DATA, 'weights-*.hdf5'),
         ), key=lambda x: os.stat(x).st_mtime)
         if weights:
-            print( "loading weights from %s",weights[-1])
+            print("loading weights from %s", weights[-1])
             model.load_weights(weights[-1])
     sequences = train[:, category_count:]
     categories = train[:, :category_count]
@@ -182,55 +185,56 @@ def run_convo(train, test,resume=False, category_count=1):
     sequences_test = test[:, category_count:]
     categories_test = test[:, :category_count]
 
-#    early_stopping = keras.callbacks.EarlyStopping(
-#        monitor='accuracy', patience=0, verbose=1, mode='auto'
-#    )
+    #    early_stopping = keras.callbacks.EarlyStopping(
+    #        monitor='accuracy', patience=0, verbose=1, mode='auto'
+    #    )
     checkpointer = ModelCheckpoint(
-        filepath=os.path.join(DATA,"weights-{epoch:03d}.hdf5"),
+        filepath=os.path.join(DATA, "weights-{epoch:03d}.hdf5"),
         verbose=1,
     )
 
     model.fit(
         sequences,
         categories,
-        #to_categorical(categories.astype(bool)),
+        # to_categorical(categories.astype(bool)),
         nb_epoch=5,
         batch_size=16,
         callbacks=[
-            #early_stopping,
+            # early_stopping,
             checkpointer,
         ],
     )
-    # Final evaluation of the model
+    # Final evaluation of the model.
     scores = model.evaluate(
         sequences_test,
         categories_test,
-        #to_categorical(categories_test.astype(bool)),
+        # to_categorical(categories_test.astype(bool)),
         verbose=1
     )
-    print("Accuracy: %.2f%%" % (scores[1]*100))
+    print("Accuracy: %.2f%%" % (scores[1] * 100))
 
 
 def main():
     options = get_options().parse_args()
     train, test = create_localization_array()
-    #train, test = create_seq_array()
-    run_convo(train, test, resume = options.resume, category_count=9)
+    # train, test = create_seq_array()
+    run_convo(train, test, resume=options.resume, category_count=9)
 
 
 def get_options():
     import argparse
-    parser = argparse.ArgumentParser( description='Run the phenotype search' )
+    parser = argparse.ArgumentParser(description='Run the phenotype search')
     parser.add_argument(
-        '-r','--resume',
-        # todo: need to update the epoch number here,
+        '-r', '--resume',
+        # TODO: need to update the epoch number here,
         # as we're starting off with very high adam velocity
-        help = 'Resume processing using the last-saved epoch (requires an un-changed model)',
-        default = False,
-        action = 'store_true',
+        help='Resume processing using the last-saved epoch (requires an un-changed model)',
+        default=False,
+        action='store_true',
     )
     return parser
 
+
 if __name__ == '__main__':
-    logging.basicConfig( level=logging.INFO )
+    logging.basicConfig(level=logging.INFO)
     main()
