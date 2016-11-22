@@ -96,11 +96,7 @@ def create_seq_array():
     oe_aa_seqs = get_sequences(
         os.path.join(DATA, 'overexpression_all.fasta'), [])
 
-    # Crudely boost the positive signals by over-sampling.
-    oe_aa_seqs = np.repeat(
-        oe_aa_seqs,
-        int(len(bg_aa_seqs) / len(oe_aa_seqs))
-    )
+    # Consider boosting positive signals by over-sampling. (Issue #3)
     oe_seq_array = seq_array_cats(oe_aa_seqs, 1)
 
     bg_train_index = int(0.8 * len(bg_seq_array))
